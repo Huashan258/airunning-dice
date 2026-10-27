@@ -1,0 +1,13 @@
+{
+  "name": "airunning-dice",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Deterministic TRPG dice, shared NPC scenes, character memory and session archives",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test dice-plugin/test/*.mjs"
+  }
+}

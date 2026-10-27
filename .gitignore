@@ -1,0 +1,8 @@
+node_modules/
+.data/
+beginscript/
+endscript/
+npc-memory/
+.release/
+*.log
+.env*
