@@ -1,6 +1,6 @@
 import {evaluateRoll,rollCommand,cocCheck,secureRoll} from './engine.mjs'
 import {createStore} from './store.mjs?version=8'
-import {theatreState,cleanModelText} from './theatre.mjs?version=10'
+import {theatreState,cleanModelText} from './theatre.mjs?version=11'
 export {evaluateRoll,rollCommand,cocCheck}
 export const HELP=`青娥骰 · 跑团指令
 .r 2d6+3 原因 / .r 4d6kh3 / .r 3#d100
