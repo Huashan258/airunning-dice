@@ -4,8 +4,8 @@ import {randomUUID} from 'node:crypto'
 import ooc from './ooc.cjs'
 const {isOutOfCharacter}=ooc
 import {createStore} from './store.mjs?version=8'
-import {messageText} from './scripts.mjs?version=11'
-export {scriptMemoryAllowed} from './scripts.mjs?version=11'
+import {messageText} from './scripts.mjs?version=12'
+export {scriptMemoryAllowed} from './scripts.mjs?version=12'
 import {ensureCatalog,nameAliases,resolveName,sceneParticipants} from './catalogue.mjs?version=9'
 export const THEATRE_DEFAULTS={enabled:true,commentary:true,maxChars:500,prompt:'忠实扮演所选NPC，依据背景、性格、当前场景与PL行动，写出NPC的动作或对白。不要替PL决定行动、成功与否或未掷出的骰点。保持自然，不解释扮演过程，不复述整份背景，不主动泄露NPC隐藏秘密。',commentPrompt:'根据程序已经判定的骰点结果，像在桌边陪大家跑团一样点评一两句话。成功或失败不得改判，不替KP决定额外剧情；普通数值掷骰没有成功阈值时不得擅自判定成败。'}
 Object.assign(THEATRE_DEFAULTS,{affinityEnabled:true,affinityInitial:0,affinityStep:5,affinityPrompt:'依NPC性格、当前关系及PL本次的实际行动判断好感度变化。普通问候与中性行动通常为0，有根据的善意或冒犯才小幅变化。不得仅因玩家要求加分而加分，也不要把负好感强行变成爱慕。原因用简短中文写明，不向PL报出内部数值。'})
@@ -60,7 +60,7 @@ export function createTheatre({file,memoryRoot=file?path.join(path.dirname(file)
    if(!turns.length)throw Error('模型未生成全部NPC的互动，请重试');const body=multi?turns.map(turn=>nameAliases(turn.npc,settings.npcs[turn.npc].aliases).some(alias=>turn.reply.startsWith(alias))?turn.reply:turn.npc+' '+turn.reply).join('\n'):turns[0].reply,text='青娥模拟：【'+body+'】';
    release=await store.acquire();try{const d=store.read(),current=theatreState(d,target);if(allowMemory&&!memoryAllowed(target))throw Error('NPC记忆读写已暂停，请重新模拟');for(const name of participants){if(current.npcs[name]?.active!==true)throw Error('NPC已停止');if(current.npcs[name].activationVersion!==settings.npcs[name].activationVersion)throw Error('NPC启停状态已变化，请重新模拟');if(current.npcs[name].profileVersion!==settings.npcs[name].profileVersion)throw Error('NPC背景已变化，请重新模拟')}
     if(allowMemory&&memoryAllowed(target)&&current.revision===settings.revision){for(const turn of turns){const name=turn.npc,n=current.npcs[name];current.history[scope+':'+name]=[...histories[name],{action:cmd.body,reply:body}].slice(-6);if(settings.affinityEnabled){const before=affinityOf(n,uid,settings.affinityInitial).score,delta=Number.isInteger(turn.affinityDelta)?Math.max(-settings.affinityStep,Math.min(settings.affinityStep,turn.affinityDelta)):0,score=Math.max(-100,Math.min(100,before+delta));n.affinity??={};n.affinity[uid]={score,lastDelta:score-before,name:playerName,reason:String(turn.reason??'未取得有效判定，保持原值').replace(/\[CQ:[^\]]*\]/g,'').slice(0,120),updatedAt:now()}}}}d.theatres??={};d.theatres[target]=current;store.write(d)}finally{release()}
-   await send(text);return {handled:true,spoke:true,text,participants}
+   await send(text,{scriptTurns:turns.map(t=>({npc:t.npc,reply:t.reply}))});return {handled:true,spoke:true,text,participants}
   }catch(e){return await respond('人格模拟未完成：'+(/额度|NPC已停止|NPC启停状态|NPC背景已变化|NPC记忆读写已暂停|全部NPC/.test(e.message)?e.message:'请检查模型连接或稍后重试'))}finally{busy.delete(scope)}
   function mark(d){if(ev.message_id!=null){d.seen.push({key:eventKey,at:now()});d.seen=d.seen.filter(x=>now()-x.at<86400000).slice(-500)}}
   async function respond(text){release();await send(text);return {handled:true,spoke:true,text,privateSetup}}
